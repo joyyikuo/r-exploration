@@ -1,0 +1,3 @@
+if (self.CavalryLogger) { CavalryLogger.start_js(["9tohg"]); }
+
+__d("CatalogCurrencySearchSource",["AbstractSearchSource","SearchableEntry"],(function(a,b,c,d,e,f){"use strict";__p&&__p();var g;c=babelHelpers.inherits(a,b("AbstractSearchSource"));g=c&&c.prototype;function a(a,c){g.constructor.call(this),this.$CatalogCurrencySearchSource1=new Map(Object.keys(a).map(function(d){return[d,new(b("SearchableEntry"))({uniqueID:d,title:c?a[d].iso:a[d].iso+" - "+a[d].name})]}))}a.prototype.getSearchableEntry=function(a){return this.$CatalogCurrencySearchSource1.get(a)};a.prototype.searchImpl=function(a,b){var c=Array.from(this.$CatalogCurrencySearchSource1.values()).filter(function(b){return b.getTitle().toLowerCase().includes(a.toLowerCase())});b(c,a)};e.exports=a}),null);

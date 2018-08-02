@@ -1,0 +1,3 @@
+if (self.CavalryLogger) { CavalryLogger.start_js(["Vc9mz"]); }
+
+__d("VideoComposerPublishDrawer.react",["ix","fbt","Image.react","Link.react","React","VideoComposerActions","VideoComposerSlidingDrawer.react","asset"],(function(a,b,c,d,e,f,g,h){"use strict";var i;i=babelHelpers.inherits(a,b("React").Component);i&&i.prototype;a.prototype.render=function(){return b("React").createElement(b("VideoComposerSlidingDrawer.react"),null,b("React").createElement(b("Link.react"),{href:"#",onClick:b("VideoComposerActions").closePublishDrawer},b("React").createElement(b("Image.react"),{alt:h._("Close"),src:g("478812")})))};function a(){i.apply(this,arguments)}e.exports=a}),null);

@@ -1,0 +1,3 @@
+if (self.CavalryLogger) { CavalryLogger.start_js(["AqW9H"]); }
+
+__d("AdsHelpTrayHeaderInitiateBookmarkButtonReducer",["AdsDataReducer","AdsHelpTrayHeaderInitiateBookmarkButtonReducerPlugin","AdsHelpTrayHeaderSaveModeDataProvider"],(function(a,b,c,d,e,f){"use strict";a=b("AdsDataReducer").create(b("AdsHelpTrayHeaderSaveModeDataProvider"),{},b("AdsHelpTrayHeaderInitiateBookmarkButtonReducerPlugin").reduce);e.exports=a}),null);

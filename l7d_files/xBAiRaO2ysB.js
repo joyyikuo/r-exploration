@@ -1,0 +1,3 @@
+if (self.CavalryLogger) { CavalryLogger.start_js(["Gb7ym"]); }
+
+__d("AdsStockImageSourceImageListLoadedReducer",["AdsDataReducer","AdsStockImageSourceImageListLoadedReducerPlugin","AdsStockImageSourceImageProvider"],(function(a,b,c,d,e,f){"use strict";a=b("AdsDataReducer").create(b("AdsStockImageSourceImageProvider"),{},b("AdsStockImageSourceImageListLoadedReducerPlugin").reduce);e.exports=a}),null);

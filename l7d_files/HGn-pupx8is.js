@@ -1,0 +1,3 @@
+if (self.CavalryLogger) { CavalryLogger.start_js(["hkpaE"]); }
+
+__d("AdsLeadGenFormEditorQuestionsSetUserInfoReducerPlugin",["AdsLeadGenConstants","AdsLeadGenRichPreviewExperiment"],(function(a,b,c,d,e,f){"use strict";a={reduce:function(a,c){if(!b("AdsLeadGenRichPreviewExperiment").canSeeRichPreview)return a;return c.fieldID===b("AdsLeadGenConstants").DATE_OF_BIRTH_QUESTION_ID?c.selected?a.add(b("AdsLeadGenConstants").DATE_OF_BIRTH_QUESTION_KEY):a["delete"](b("AdsLeadGenConstants").DATE_OF_BIRTH_QUESTION_KEY):a}};e.exports=a}),null);

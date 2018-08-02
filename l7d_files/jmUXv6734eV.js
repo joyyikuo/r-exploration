@@ -1,0 +1,3 @@
+if (self.CavalryLogger) { CavalryLogger.start_js(["PZyXm"]); }
+
+__d("FBRTCIceStatsParser",[],(function(a,b,c,d,e,f){__p&&__p();var g=null;h.getInstance=function(){"use strict";g||(g=new h());return g};h.prototype.extractIceInfo=function(a){"use strict";var b=[];a=a.split("\r\n");for(var c=0;c<a.length;c++){var d=a[c];this.$1(d)&&b.push({gen:this.$2(d),type:this.$3(d)})}return b};h.prototype.$1=function(a){"use strict";return a.indexOf("candidate:")>-1};h.prototype.$2=function(a){"use strict";var b=0;a=a.match(/generation (\d+)/);a&&(b=parseInt(a[1],10));return b};h.prototype.$3=function(a){"use strict";a=a.match(/typ (host|relay|srflx|prflx)/);if(a)return a[1];else return"unknown"};function h(){"use strict"}e.exports=h}),null);

@@ -1,0 +1,3 @@
+if (self.CavalryLogger) { CavalryLogger.start_js(["xkRy9"]); }
+
+__d("AdsLeadGenFormPreviewHeaderBackButton.react",["cx","ix","AdsLeadGenFormPreviewConstants","Image.react","React"],(function(a,b,c,d,e,f,g,h){"use strict";var i,j=b("AdsLeadGenFormPreviewConstants").PreviewEnum;i=babelHelpers.inherits(a,b("React").Component);i&&i.prototype;a.prototype.render=function(){return this.props.previewType===j.INSTAGRAM?b("React").createElement("div",{className:"_6h9x"},b("React").createElement(b("Image.react"),{height:31,src:h("605876"),width:31})):b("React").createElement("div",{className:"_6k-2"},b("React").createElement(b("Image.react"),{height:20,src:h("620496"),width:16}))};function a(){i.apply(this,arguments)}e.exports=a}),null);

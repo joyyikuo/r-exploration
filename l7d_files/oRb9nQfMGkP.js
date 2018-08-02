@@ -1,0 +1,3 @@
+if (self.CavalryLogger) { CavalryLogger.start_js(["wpucx"]); }
+
+__d("AdsLeadGenFormEditorQuestionsSetUserInfoReducer",["AdsDataReducer","AdsLeadGenFormEditorCapabilitiesProvider","AdsLeadGenFormEditorQuestionsSetUserInfoReducerPlugin"],(function(a,b,c,d,e,f){"use strict";a=b("AdsDataReducer").create(b("AdsLeadGenFormEditorCapabilitiesProvider"),{},b("AdsLeadGenFormEditorQuestionsSetUserInfoReducerPlugin").reduce);e.exports=a}),null);

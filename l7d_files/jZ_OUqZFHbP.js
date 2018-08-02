@@ -1,0 +1,3 @@
+if (self.CavalryLogger) { CavalryLogger.start_js(["H19ff"]); }
+
+__d("ReplyingToMessageFallbackReact.bs",["cx","fbt","React","ReasonReact.bs","XUICloseButtonReact.bs"],(function(a,b,c,d,e,f,g,h){"use strict";__p&&__p();var i=b("ReasonReact.bs").statelessComponent("ReplyingToMessageFallbackReact");function j(a,c,d){return[i[0],i[1],i[2],i[3],i[4],i[5],i[6],i[7],function(){return b("React").createElement("div",{className:(d?"_692o":"")+" _67tu"},b("ReasonReact.bs").element(0,0,b("XUICloseButtonReact.bs").make(["_67tv"],1,d?1:2,a,0,[])),h._("Replying to message"))},i[9],i[10],i[11],i[12]]}a=b("ReasonReact.bs").wrapReasonForJs(i,function(a){return j(a.onCancelReplyingToMessage,[],a.isChatTab)});f.component=i;f.make=j;f.jsComponent=a}),null);

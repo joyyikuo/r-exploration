@@ -1,0 +1,177 @@
+---
+title: "Buzzfeed Tasty's Facebok Posts in the Last 7 Days"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(rvest)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+
+```
+
+## Overview
+
+This project is an exploration project of Buzzfeed Tasty's Facebook posts and their audience reach. 
+
+The first part of this project aims to scrape data directly from saved html document of the Buzzfeed Tasty Facebook page with the R package 'rvest'. A Google Chrome add-on 'Social Fixer' has been used to save Tasty's Facebook posts from 2018 July 27th, 3:00PM to 2018 July 20th, 3:00PM, at a total of 164 posts. Each post is treated as an observation, with key variables to extract, including:
+
+Post title
+Post date
+Number of likes (includes all reactions)
+Number of comments
+Number of shares
+
+The second part of this project will take the data scraped and explore the underlying audience reach, trends and interesting insights.
+
+-----------
+
+##Part I: Data Scraping
+
+The project has been setup with basic packages such as 'ggplot2' and 'dplyr'. The key package used for this web scraping process is 'rvest'. 
+
+First, the exported html file is read, and each individual post is saved into the list i_post. This is done by selecting the nodes where the class includes all components of the post (excluding the comment section).
+
+Taking a look at the length of the post list, we see that the length is 197, which does not match our expected 164 post number.
+```{r}
+webpage <- read_html("Tasty - Home.htm")
+
+i_post <- 
+  webpage %>%
+  html_nodes(xpath = "//div[@class='_4-u2 _4-u8']")
+length(i_post)
+```
+
+Taking a look at the first 5 entries of i_post in text form, we see that some header sections or pinned posts are also included in our list.
+```{r}
+html_text(i_post[1:5])
+```
+
+We will manually exclude the first 3 entries in our i_post list since they are either header components or pinned posts, but as we examine the length of our i_post list, we'll realize it is still far from our expected list length of 164.
+```{r}
+i_post[1:3] <- NULL
+length(i_post)
+```
+
+With some looking around near the expected tail of the i_post list, it can be confirmed that the 164th post contains the desired "last post", posted on July 20th at 3:00PM. The posts after the 164th will be trimmed from the list.
+```{r}
+html_text(i_post[164])
+i_post[165:194] <- NULL
+length(i_post)
+```
+
+Now that we have a list with each individual post between the 7-day period stored in each element, we will pre-define vectors to store our variable values.
+```{r}
+#Define attributes of interest with default values and length of 164
+post_title <- rep("na",164)
+post_date <- rep("na",164)
+
+numlike <- rep(0,164)
+numcomment <- rep(0,164)
+numshare <- rep(0,164)
+
+is_video <- logical(164)
+```
+
+Functions had been written for extracting each variable from the list of posts. The functions are sourced into our current file.
+```{r}
+source("extract_info.R")
+```
+
+As the extraction function outputs our variables in the desired format other than the date, which is outputted as characters instead of dates, we format the post_date vector into date and time before we combine all the variables into a single data frame.
+```{r}
+#Assign each extracted values into vectors
+for(i in 1:164){
+  post_title[i] <- extract.post(i)
+  post_date[i] <- extract.date(i)
+  numlike[i] <- extract.likes(i)
+  numcomment[i] <- extract.comments(i)
+  numshare[i] <- extract.shares(i)
+  is_video[i] <- is.video(i)
+}
+
+#format character dates into datetime dates
+post_date_formatted <- as.POSIXct(post_date,tz = Sys.timezone(), "%m/%d/%Y %I:%M%p")
+
+#combine vectors into data frame
+tasty_fb <- data_frame(title = post_title, date = post_date_formatted, numlikes = numlike, numcomments = numcomment, numshares = numshare, isvideo = is_video)
+
+str(tasty_fb)
+```
+
+Now that we have a nice data frame going from the Buzzfeed Tasty posts from July 20th 2018 to July 27th 2018, it's time to take a look at what insights these data offer.
+
+## Part II: Data Analysis
+
+### Audience Reach Variables
+First, we will evaluate our most important variables for audience reach, numlikes, numcomments, and numshare. It is quite intuitive to think that the more likes a post has, the more comments it'll recieve (positive correlation), but a quick graph of numcomments to numlikes (left) does not show this very clearly, with most of the points clogged around the origin.
+
+A log scale is applied (right), and now a clearer positive correlation is visible between the two variables.
+
+```{r fig.width = 8}
+p1_like_comment <- ggplot(data = tasty_fb, aes(numlikes, numcomments)) + 
+  geom_point()
+p2_like_comment <- ggplot(data = tasty_fb, aes(numlikes, numcomments)) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10()
+
+grid.arrange(p1_like_comment,p2_like_comment, nrow = 1, widths = c(1,1))
+```
+
+By identifying which of the posts are video posts, we can see that most video posts recieve more than 10K likes, a
+```{r}
+p3_like_comment <- ggplot(data = tasty_fb, aes(numlikes, numcomments, col = isvideo)) +
+  geom_point(alpha = 0.6) +
+  scale_x_log10(breaks = c(10^(1:5))) +
+  scale_y_log10(breaks = c(10^(1:5)))
+
+p3_like_comment
+```
+
+```{r echo=FALSE, fig.width=10, fig.height=3}
+p3_like_share <- ggplot(data = tasty_fb, aes(numlikes, numshares, col = isvideo), legend) +
+  geom_point(alpha = 0.6) +
+  scale_x_log10(breaks = c(10^(1:5))) +
+  scale_y_log10(breaks = c(10^(1:5))) +
+  theme(legend.position = "none")
+
+p3_share_comment<- ggplot(data = tasty_fb, aes(numcomments, numshares, col = isvideo)) +
+  geom_point(alpha = 0.6) +
+  scale_x_log10(breaks = c(10^(1:5))) +
+  scale_y_log10(breaks = c(10^(1:5))) +
+  theme(legend.position = "none")
+
+grid.arrange(p3_share_comment,p3_like_share,p3_like_comment, nrow = 1, widths = c(3,3,4))
+```
+
+
+```{r}
+tasty_fb <- tasty_fb %>%
+  mutate(reach = numlikes + numcomments + numshares)
+```
+
+#Post date and post frequency
+When first observing the structure of the tasty_fb data frame, one interesting thing that stood out was how precisely timed the posts were. This is understandable as these posts and videos are most likely made in advance and posted with a program when they're "mass produced" in Buzzfeed.
+
+```{r}
+
+tasty_fb$time_us <- format(tasty_fb$date, tz = "America/Los_Angeles")
+
+tasty_fb$date_byday <- as.factor(as.Date(tasty_fb$time_us))
+tasty_fb$timeofday <- as.POSIXct(strftime(tasty_fb$time_us, format = "%H:%M:%S"), format = "%H:%M:%S")
+
+#For the simplicity of the graph, changing "2018-07-27 00:00:00" to "2018-07-26 23:59:59" so that the only entry on 07-27 would not take up an entire row
+tasty_fb$date_byday[1] <- "2018-07-26"
+tasty_fb$timeofday[1] <- as.POSIXct("23:59:59", format = "%H:%M:%S")
+
+ggplot(tasty_fb,aes(x = timeofday, y = date_byday, col = reach)) +
+  geom_point(alpha = 0.7) +
+  scale_x_datetime(date_minor_breaks = "1 hour", date_labels = "%H:%M") +
+  labs(x = "Time of the Day", y = "Date") +
+  scale_color_gradient(low = "light blue", high = "blue")
+  
+
+```
+

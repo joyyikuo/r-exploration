@@ -1,0 +1,3 @@
+if (self.CavalryLogger) { CavalryLogger.start_js(["999R5"]); }
+
+__d("RTCP2PCallEscalationStoreState",["FBRTCMessage","FBRTCVideoEscalationStore","immutable"],(function(a,b,c,d,e,f){var g;c=b("FBRTCVideoEscalationStore").CallType;g=babelHelpers.inherits(a,b("immutable").Record({awaitingACK:!1,callType:c.voip,escalated:!1,escalateMediaStream:null,failureReason:null,initiatedEscalation:!1,inProgress:!1,request:null,response:null,token:null}));g&&g.prototype;function a(){"use strict";g.apply(this,arguments)}e.exports=a}),null);

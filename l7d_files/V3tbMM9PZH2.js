@@ -1,0 +1,3 @@
+if (self.CavalryLogger) { CavalryLogger.start_js(["mMvBe"]); }
+
+__d("RTCUserRecord",["immutable"],(function(a,b,c,d,e,f){"use strict";var g;c=b("immutable").Record({FBID:"UNDEFINED",isMessengerUser:!1,isPartiesUser:!1,lastConnectedAt:0,meetingID:null,participantState:null,profilePictureUrl:null,profileUrl:null,roomLocation:null,screenStreams:b("immutable").Set(),streams:b("immutable").Set(),userName:"",userShortName:"",vanity:""});g=babelHelpers.inherits(a,c);g&&g.prototype;function a(){g.apply(this,arguments)}e.exports=a}),null);

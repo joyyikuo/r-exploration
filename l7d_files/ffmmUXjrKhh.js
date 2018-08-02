@@ -1,0 +1,3 @@
+if (self.CavalryLogger) { CavalryLogger.start_js(["Jt+dX"]); }
+
+__d("GhostOwl",["Parent","getElementPosition"],(function(a,b,c,d,e,f){"use strict";__p&&__p();a=function(a){var c=Array.from(a.querySelectorAll("img"));c=c.filter(function(a){a=b("getElementPosition")(a);return a.width>0||a.height>0});c=c.length===0;return c&&!h(a)};var g=".hidden_elem, .ego_ads_holdout",h=function(a){return!!b("Parent").bySelector(a,g)};e.exports={assess:a}}),null);
