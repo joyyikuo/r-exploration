@@ -7,6 +7,25 @@ extract.post <- function(x) {
     i_post[x] %>%
     html_nodes(xpath = ".//div[@class='mbs _6m6 _2cnj _5s6c']") %>%
     html_text()
+  
+  if(identical(curr_title, empty_char)){
+    curr_title <-
+      i_post[x] %>%
+      html_nodes(xpath = ".//div[@class='mtm _5pco']/p") %>%
+      html_text()
+  }
+  
+  if(identical(curr_title, empty_char)){
+    curr_title_temp <-
+      i_post[x] %>%
+      html_nodes(xpath = ".//div[@class='_5pbx userContent _3576']/p") %>%
+      html_text()
+    
+    for(i in 1:length(curr_title_temp)){
+      curr_title = paste(curr_title, curr_title_temp[i], sep = " ")
+    }
+  }
+  
   if(identical(curr_title, empty_char)){
     return(i)
   }else{

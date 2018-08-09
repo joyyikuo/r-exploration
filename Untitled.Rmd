@@ -8,12 +8,12 @@ library(rvest)
 library(ggplot2)
 library(dplyr)
 library(gridExtra)
-
+library(gtrendsR)
 ```
 
 ## Overview
 
-This project is an exploration project of Buzzfeed Tasty's Facebook posts and their audience reach. 
+This project is an exploration project of Buzzfeed Tasty's Facebook posts, the posts' audience reach and attempts to evaluate the impact of the posts with the highest audience reach.
 
 The first part of this project aims to scrape data directly from saved html document of the Buzzfeed Tasty Facebook page with the R package 'rvest'. A Google Chrome add-on 'Social Fixer' has been used to save Tasty's Facebook posts from 2018 July 27th, 3:00PM to 2018 July 20th, 3:00PM, at a total of 164 posts. Each post is treated as an observation, with key variables to extract, including:
 
@@ -72,6 +72,7 @@ numcomment <- rep(0,164)
 numshare <- rep(0,164)
 
 is_video <- logical(164)
+is_sharepost <- logical(164)
 ```
 
 Functions had been written for extracting each variable from the list of posts. The functions are sourced into our current file.
@@ -102,14 +103,18 @@ str(tasty_fb)
 
 Now that we have a nice data frame going from the Buzzfeed Tasty posts from July 20th 2018 to July 27th 2018, it's time to take a look at what insights these data offer.
 
+-----------
+
 ## Part II: Data Analysis
 
-### Audience Reach Variables
-First, we will evaluate our most important variables for audience reach, numlikes, numcomments, and numshare. It is quite intuitive to think that the more likes a post has, the more comments it'll recieve (positive correlation), but a quick graph of numcomments to numlikes (left) does not show this very clearly, with most of the points clogged around the origin.
+### Audience Reaction Variables
+
+#### Overview
+First, we will evaluate our audience reaction variables, numlikes, numcomments, and numshare. It is quite intuitive to think that the more likes a post has, the more comments it'll recieve (positive correlation), but a quick graph of numcomments to numlikes (left) does not show this very clearly, with most of the points clogged around the origin.
 
 A log scale is applied (right), and now a clearer positive correlation is visible between the two variables.
 
-```{r fig.width = 8}
+```{r echo= FALSE, fig.width= 8, fig.align= "center"}
 p1_like_comment <- ggplot(data = tasty_fb, aes(numlikes, numcomments)) + 
   geom_point()
 p2_like_comment <- ggplot(data = tasty_fb, aes(numlikes, numcomments)) +
@@ -120,8 +125,9 @@ p2_like_comment <- ggplot(data = tasty_fb, aes(numlikes, numcomments)) +
 grid.arrange(p1_like_comment,p2_like_comment, nrow = 1, widths = c(1,1))
 ```
 
-By identifying which of the posts are video posts, we can see that most video posts recieve more than 10K likes, a
-```{r}
+By identifying which of the posts are video posts, we can see that most video posts recieve more than 10K likes, and 1000 comments. These fit our expectations as Buzzfeed Tasty is best known for their cooking videos! For the simplicity of this analysis, shared videos (non-original content) will not be considered as videos.
+
+```{r echo= FALSE, fig.align="center"}
 p3_like_comment <- ggplot(data = tasty_fb, aes(numlikes, numcomments, col = isvideo)) +
   geom_point(alpha = 0.6) +
   scale_x_log10(breaks = c(10^(1:5))) +
@@ -130,8 +136,9 @@ p3_like_comment <- ggplot(data = tasty_fb, aes(numlikes, numcomments, col = isvi
 p3_like_comment
 ```
 
+Applying this format to share~like and comment~share, it can be observed that the linear relationship and distribution is similar across the 3 reaction variables.
 ```{r echo=FALSE, fig.width=10, fig.height=3}
-p3_like_share <- ggplot(data = tasty_fb, aes(numlikes, numshares, col = isvideo), legend) +
+p3_like_share <- ggplot(data = tasty_fb, aes(numlikes, numshares, col = isvideo)) +
   geom_point(alpha = 0.6) +
   scale_x_log10(breaks = c(10^(1:5))) +
   scale_y_log10(breaks = c(10^(1:5))) +
@@ -143,19 +150,74 @@ p3_share_comment<- ggplot(data = tasty_fb, aes(numcomments, numshares, col = isv
   scale_y_log10(breaks = c(10^(1:5))) +
   theme(legend.position = "none")
 
+
 grid.arrange(p3_share_comment,p3_like_share,p3_like_comment, nrow = 1, widths = c(3,3,4))
 ```
 
 
-```{r}
-tasty_fb <- tasty_fb %>%
-  mutate(reach = numlikes + numcomments + numshares)
+
+#### Reaction outliers
+There is though one interesting outlier with less than 3000 likes, 100 comments and 300 shares. After a look at the title, it is clear that this is an original video made by Buzzfeed Tasty, but only to promote their Cookbook. This explains the lower number of reactions.
+```{r echo=FALSE}
+tasty_fb[which(tasty_fb$isvideo == TRUE & tasty_fb$numcomments < 100),1]
+tasty_fb[which(tasty_fb$isvideo == TRUE & tasty_fb$numcomments < 100),3:6]
 ```
 
-#Post date and post frequency
-When first observing the structure of the tasty_fb data frame, one interesting thing that stood out was how precisely timed the posts were. This is understandable as these posts and videos are most likely made in advance and posted with a program when they're "mass produced" in Buzzfeed.
+On the topic of outliers, let's also take this chance to examine our outlier minimum, a data point with less than 10 comments and 100 likes. Unlike the advertisement video shown previously, this post title doesn't seem very out of the ordinary.
+```{r echo=FALSE}
+tasty_fb[which(tasty_fb$numcomments == min(tasty_fb$numcomments)),1]
+tasty_fb[which(tasty_fb$numcomments == min(tasty_fb$numcomments)),2:6]
+```
 
-```{r}
+By examining the neighboring post titles, it seems like this post was accidentally posted 2 times in a row, which explains the low number of reactions. The duplicate post seems to have recieved relatively normal amounts of reactions from the audience, although still on the lower end of the spectrum. 
+```{r echo=FALSE}
+min_index <- which(tasty_fb$numcomments == min(tasty_fb$numcomments))
+tasty_fb[(min_index-3):(min_index+3),1]
+
+tasty_fb[(min_index-1):min_index,1]
+tasty_fb[(min_index-1):min_index,2:6]
+```
+
+
+
+####The "Reach" index
+Now that we've started to explore the reaction variables to posts, it is time to include the "reach" factor into our analysis. This project defines audience reach based on user reactions such as likes, comments and shares, based on the assumption that Facebook shows the original post when friends of a user react to posts. The more reaction a post gets, the broader the reach of the post.
+
+As we lack knowledge to how each reaction affects the display of the post on a friend's Newsfeed, we will omit weighting the reaction variables and stick with a simple model of summing up all the reactions for a "reach" index.
+
+```{r echo=FALSE, fig.width=10, fig.height=3}
+tasty_fb <- tasty_fb %>%
+  mutate(reach = numlikes + numcomments + numshares)
+
+p4_like_comment <- ggplot(data = tasty_fb, aes(numlikes, numcomments, col = reach)) +
+  geom_point(alpha = 0.6) +
+  scale_x_log10(breaks = c(10^(1:5))) +
+  scale_y_log10(breaks = c(10^(1:5))) +
+  scale_color_gradient(low = "light blue", high = "blue")
+
+p4_like_share <- ggplot(data = tasty_fb, aes(numlikes, numshares, col = reach)) +
+  geom_point(alpha = 0.6) +
+  scale_x_log10(breaks = c(10^(1:5))) +
+  scale_y_log10(breaks = c(10^(1:5))) +
+  theme(legend.position = "none") +
+  scale_color_gradient(low = "light blue", high = "blue")
+
+p4_share_comment<- ggplot(data = tasty_fb, aes(numcomments, numshares, col = reach)) +
+  geom_point(alpha = 0.6) +
+  scale_x_log10(breaks = c(10^(1:5))) +
+  scale_y_log10(breaks = c(10^(1:5))) +
+  theme(legend.position = "none") +
+  scale_color_gradient(low = "light blue", high = "blue")
+
+grid.arrange(p4_share_comment,p4_like_share,p4_like_comment, nrow = 1, widths = c(3,3,4))
+```
+
+From the distribution of the high reach gradient and the log scale plotting, it is clear that the reaction for Tasty posts are highly skewed to the left. This should be beneficial when we try to evaluate the impact of high reach posts.
+
+####Post date and post frequency
+When first observing the structure of the tasty_fb data frame, one interesting thing that stood out was how precisely timed the posts were. This is understandable as these posts and videos are most likely made in advance and posted with a program when they're "mass produced" in Buzzfeed. To better understand the posting trends, the time has been converted to LA timezone (PDT). 
+
+```{r echo= FALSE, fig.align= "center"}
 
 tasty_fb$time_us <- format(tasty_fb$date, tz = "America/Los_Angeles")
 
@@ -166,12 +228,102 @@ tasty_fb$timeofday <- as.POSIXct(strftime(tasty_fb$time_us, format = "%H:%M:%S")
 tasty_fb$date_byday[1] <- "2018-07-26"
 tasty_fb$timeofday[1] <- as.POSIXct("23:59:59", format = "%H:%M:%S")
 
-ggplot(tasty_fb,aes(x = timeofday, y = date_byday, col = reach)) +
-  geom_point(alpha = 0.7) +
+#Plot with the reach gradient from 
+ggplot(tasty_fb,aes(x = timeofday, y = date_byday, col = reach, shape = isvideo)) +
+  geom_point(alpha = 0.8) +
   scale_x_datetime(date_minor_breaks = "1 hour", date_labels = "%H:%M") +
   labs(x = "Time of the Day", y = "Date") +
   scale_color_gradient(low = "light blue", high = "blue")
   
 
 ```
+After visualising the individual posts, some interesting trends are shown:
 
+* Post reach is higher during "active" hours (6AM to 6PM)
+* Most posts are precisely timed (and scheduled, probably for automatic posting) during "inactive" hours (6PM to 6AM)
+* Videos are only posted between 9AM and 3PM
+    + Videos are posted daily at 12PM
+    + Videos are posted almost daily at 9AM and 3PM
+    + Videos are posted occasionally at 11AM, 1PM and 2PM
+
+### Maximum reach and trend impact
+
+Now that we've explored the reaction variables and defined our reach index, we'll be using the reach index to identify our high and low reach posts, and examine their impact on Google Trends.
+```{r echo= FALSE}
+tasty_fb_sorted <- tasty_fb %>%
+  arrange(desc(reach)) %>%
+  select(title,isvideo,reach,time_us)
+
+head(tasty_fb_sorted)
+```
+
+From the sorted posts, we select the head (top 6) posts for our trend evaluation. Taking a look at the title of the post, the following keywords were selected as potential search terms based on the topic/title of the posts:
+
+* jalapeño poppers
+* meal prep
+* chicken teriyaki fried rice
+* decorated cookies (Holly Fox's instagram)
+* breakfast bomb
+* chocolate cheesecake pudding
+
+With the gtrendsR package, we will be extracting Google trends data on these search terms. As the earliest post was posted on 2018-07-20 and latest post posted on 2018-07-26, we will set our evaluation dates to range from 2018-07-17 (3 days prior to earliest post) to 2018-07-29 (3 days after latest post). We will be looking specifically at the interest over time worldwide from Google Trends.
+```{r}
+#Set system environment timezone to US/LA so that gtrends data returned are based on LA time
+Sys.setenv(TZ = "America/Los_angeles")
+
+#call gtrends package for interest over time according to selected topics
+gtrend_jalapeno <- gtrends("jalapeno poppers",time= "2018-07-17 2018-07-29")$interest_over_time
+gtrend_mealprep <- gtrends("meal prep", time= "2018-07-17 2018-07-29")$interest_over_time
+gtrend_friedrice <- gtrends("chicken teriyaki fried rice", time= "2018-07-17 2018-07-29")$interest_over_time
+gtrend_cookies <- gtrends("Holly Fox", time= "2018-07-17 2018-07-29")$interest_over_time
+gtrend_breakfast <- gtrends("breakfast bomb", time= "2018-07-17 2018-07-29")$interest_over_time
+gtrend_chocopudding <- gtrends("chocolate cheesecake pudding", time= "2018-07-17 2018-07-29")$interest_over_time
+
+#create master frame for faceting
+gtrend_master <- bind_rows(gtrend_jalapeno,gtrend_mealprep,gtrend_friedrice,gtrend_cookies,gtrend_breakfast,gtrend_chocopudding)
+gtrend_master$date <- as.POSIXct(as.character(gtrend_master$date), tz="America/Los_angeles")
+
+#create factor keyword for faceting order
+gtrend_master$keyword_f <- factor(gtrend_master$keyword, levels = c("jalapeno poppers", "meal prep", "chicken teriyaki fried rice", "Holly Fox","breakfast bomb", "chocolate cheesecake pudding"))
+
+#organize top 6 (head) posts from sorted posts to graph, selecting the post time and associated keywords
+tasty_fb_top6 <- head(tasty_fb_sorted) %>%
+  select(time_us) %>%
+  mutate(keyword_f = unique(gtrend_master$keyword_f))
+  
+```
+
+```{r echo=FALSE}
+yt_jalapeno <- gtrends("jalapeno poppers",time= "2018-07-17 2018-07-29", gprop = "youtube")$interest_over_time
+yt_mealprep <- gtrends("meal prep", time= "2018-07-17 2018-07-29", gprop = "youtube")$interest_over_time
+yt_friedrice <- gtrends("chicken teriyaki fried rice", time= "2018-07-17 2018-07-29", gprop = "youtube")$interest_over_time
+yt_cookies <- gtrends("Holly Fox", time= "2018-07-17 2018-07-29", gprop = "youtube")$interest_over_time
+yt_breakfast <- gtrends("breakfast bomb", time= "2018-07-17 2018-07-29", gprop = "youtube")$interest_over_time
+yt_chocopudding <- gtrends("chocolate cheesecake pudding", time= "2018-07-17 2018-07-29", gprop = "youtube")$interest_over_time
+
+yt_master <- bind_rows(yt_jalapeno,yt_mealprep,yt_friedrice,yt_cookies,yt_breakfast,yt_chocopudding)
+yt_master$date <- as.POSIXct(as.character(yt_master$date), tz="America/Los_angeles")
+
+yt_master <- rename(yt_master, youtube_hits  = hits)
+```
+
+As the top posts are mainly videos, we will also add in trends on Youtube for referencing. The retrieving process has been completed behind the scene, so we'll be joining the youtube hits with the original dataset of web hits.
+```{r}
+gtrend_master <- yt_master %>%
+  select(date,keyword,youtube_hits) %>%
+  right_join(gtrend_master, by = c("keyword","date"))
+```
+
+With our Google Trends data ready, let's take a look at whether web search trends (black) and Youtube trends (red) are actually affected by our most popular Buzzfeed Tasty posts. The post date is indicated by the blue vertical line:
+```{r fig.align="center", fig.height=8, fig.width=8, echo=FALSE}
+
+trend_plot <- ggplot(data = gtrend_master, aes(x = date, y = hits)) +
+  geom_line(size = 1) +
+  facet_grid(keyword_f~.) +
+  scale_x_datetime(date_breaks = "1 day", date_labels = "%m-%d", timezone = "America/Los_angeles") +
+  geom_vline(aes(xintercept = as.POSIXct(time_us, timezone = "America/Los_angeles")),data = tasty_fb_top6, col = "blue", size = 3, alpha = 0.4)
+
+trend_plot <- trend_plot + geom_line(data = gtrend_master, aes(x = date, y = youtube_hits, col = "red")) + theme(legend.position = "none")
+
+trend_plot
+```
