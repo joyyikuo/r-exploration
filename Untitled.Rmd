@@ -93,7 +93,7 @@ for(i in 1:164){
 }
 
 #format character dates into datetime dates
-post_date_formatted <- as.POSIXct(post_date,tz = Sys.timezone(), "%m/%d/%Y %I:%M%p")
+post_date_formatted <- as.POSIXct(post_date,tz = "Asia/Shanghai", "%m/%d/%Y %I:%M%p")
 
 #combine vectors into data frame
 tasty_fb <- data_frame(title = post_title, date = post_date_formatted, numlikes = numlike, numcomments = numcomment, numshares = numshare, isvideo = is_video)
@@ -268,9 +268,6 @@ From the sorted posts, we select the head (top 6) posts for our trend evaluation
 
 With the gtrendsR package, we will be extracting Google trends data on these search terms. As the earliest post was posted on 2018-07-20 and latest post posted on 2018-07-26, we will set our evaluation dates to range from 2018-07-17 (3 days prior to earliest post) to 2018-07-29 (3 days after latest post). We will be looking specifically at the interest over time worldwide from Google Trends.
 ```{r}
-#Set system environment timezone to US/LA so that gtrends data returned are based on LA time
-Sys.setenv(TZ = "America/Los_angeles")
-
 #call gtrends package for interest over time according to selected topics
 gtrend_jalapeno <- gtrends("jalapeno poppers",time= "2018-07-17 2018-07-29")$interest_over_time
 gtrend_mealprep <- gtrends("meal prep", time= "2018-07-17 2018-07-29")$interest_over_time
@@ -281,7 +278,9 @@ gtrend_chocopudding <- gtrends("chocolate cheesecake pudding", time= "2018-07-17
 
 #create master frame for faceting
 gtrend_master <- bind_rows(gtrend_jalapeno,gtrend_mealprep,gtrend_friedrice,gtrend_cookies,gtrend_breakfast,gtrend_chocopudding)
-gtrend_master$date <- as.POSIXct(as.character(gtrend_master$date), tz="America/Los_angeles")
+
+#set gtrends returned time to LA timezone
+attributes(gtrend_master$date)$tzone <- "America/Los_angeles"
 
 #create factor keyword for faceting order
 gtrend_master$keyword_f <- factor(gtrend_master$keyword, levels = c("jalapeno poppers", "meal prep", "chicken teriyaki fried rice", "Holly Fox","breakfast bomb", "chocolate cheesecake pudding"))
@@ -302,7 +301,7 @@ yt_breakfast <- gtrends("breakfast bomb", time= "2018-07-17 2018-07-29", gprop =
 yt_chocopudding <- gtrends("chocolate cheesecake pudding", time= "2018-07-17 2018-07-29", gprop = "youtube")$interest_over_time
 
 yt_master <- bind_rows(yt_jalapeno,yt_mealprep,yt_friedrice,yt_cookies,yt_breakfast,yt_chocopudding)
-yt_master$date <- as.POSIXct(as.character(yt_master$date), tz="America/Los_angeles")
+attributes(yt_master$date)$tzone <- "America/Los_angeles"
 
 yt_master <- rename(yt_master, youtube_hits  = hits)
 ```
@@ -314,16 +313,22 @@ gtrend_master <- yt_master %>%
   right_join(gtrend_master, by = c("keyword","date"))
 ```
 
-With our Google Trends data ready, let's take a look at whether web search trends (black) and Youtube trends (red) are actually affected by our most popular Buzzfeed Tasty posts. The post date is indicated by the blue vertical line:
+With our Google Trends data ready, let's take a look at whether web search trends (black) and Youtube trends (red) are actually affected by our most popular Buzzfeed Tasty posts. The post date is labeled with the blue vertical line:
 ```{r fig.align="center", fig.height=8, fig.width=8, echo=FALSE}
 
 trend_plot <- ggplot(data = gtrend_master, aes(x = date, y = hits)) +
   geom_line(size = 1) +
   facet_grid(keyword_f~.) +
-  scale_x_datetime(date_breaks = "1 day", date_labels = "%m-%d", timezone = "America/Los_angeles") +
-  geom_vline(aes(xintercept = as.POSIXct(time_us, timezone = "America/Los_angeles")),data = tasty_fb_top6, col = "blue", size = 3, alpha = 0.4)
+  scale_x_datetime(date_breaks = "1 day", date_labels = "%m-%d", date_minor_breaks = "1 day") +
+  geom_vline(aes(xintercept = as.POSIXct(time_us, timezone = "America/Los_angeles")),data = tasty_fb_top6, col = "blue", size = 2, alpha = 0.4)
 
 trend_plot <- trend_plot + geom_line(data = gtrend_master, aes(x = date, y = youtube_hits, col = "red")) + theme(legend.position = "none")
 
 trend_plot
 ```
+
+#### Insights and Conclusion
+
+As the Google Trends data are concluded daily, we can see that some trends like "Jalapeno poppers" do display higher web trends and youtube trends after the Buzzfeed Tasty posts. But with the majority of the trends, the change in trend is rather inconsistent after the posts and therefore do not show convincing evidence of effect on Google Trends results.
+
+For example, while "Holly Fox" web trends do display growth after the post, the youtube trends showed lower hits than before the video - or the "breakfast bomb" youtube trend showing growth after the post but web search trend maintaining the same level of hits - the inconsistency between the youtube trend growth and the web search trend growth for the different top posts does not show convincing evidence of Buzzfeed Tasty viral posts affecting Google Trends.
